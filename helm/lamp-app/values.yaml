@@ -1,0 +1,22 @@
+replicaCount: 1
+
+image:
+  repository: kosmolito/php82-nonroot
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8080
+
+
+# Mariadb stuff here
+mariadb:
+  auth:
+    rootPassword: "Password123!"
+    database: "lamp_db"
+    username: "lamp_user"
+    password: "lampPassword"
+  primary:
+    persistence:
+      enabled: false

@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      initContainers:
+        - name: wait-for-db
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z "{{ .Release.Name }}-mariadb" 3306; do
+                echo "waiting for db..."
+                sleep 2
+              done
+      containers:
+        - name: apache-php
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: 8080
+          env:
+            # - name: APACHE_RUN_USER
+            #   value: "1001"
+            # - name: APACHE_RUN_GROUP
+            #   value: "1001"
+            - name: DB_HOST
+              value: "{{ .Release.Name }}-mariadb"
+            - name: DB_DATABASE
+              value: {{ .Values.mariadb.auth.database }}
+            - name: DB_USER
+              value: {{ .Values.mariadb.auth.username }}
+            - name: DB_PASSWORD
+              value: {{ .Values.mariadb.auth.password }}
+          volumeMounts:
+            - name: app-code
+              mountPath: /var/www/html
+            - name: app-code
+              mountPath: /etc/apache2/ports.conf
+              subPath: apache.conf
+      volumes:
+        - name: app-code
+          configMap:
+            name: {{ .Release.Name }}

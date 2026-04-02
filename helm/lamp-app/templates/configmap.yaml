@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}
+data:
+  index.php: |
+    <?php
+    $conn = new mysqli(
+      getenv("DB_HOST"),
+      getenv("DB_USER"),
+      getenv("DB_PASSWORD"),
+      getenv("DB_DATABASE")
+    );
+
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
+
+    echo "Connected successfully to MariaDB!";
+    ?>
+  apache.conf: |
+    Listen 8080
+    ServerName localhost
+
+    <VirtualHost *:8080>
+        DocumentRoot /var/www/html
+    </VirtualHost>
