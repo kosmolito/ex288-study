@@ -16,8 +16,8 @@ const server = http.createServer((req, res) => {
 
   res.writeHead(200, { "Content-Type": "text/html" });
   res.end(`
-    <h1>Hello from Tekton Pipeline</h1>
-    <h2>This is a simple Node.js application running in a Tekton Pipeline</h2>
+    <h1>Hello from OpenShift</h1>
+    <h2>This is a simple Node.js application</h2>
     <p>Path: ${req.url}</p>
   `);
 });
