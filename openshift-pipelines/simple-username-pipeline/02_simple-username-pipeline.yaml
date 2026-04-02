@@ -7,7 +7,7 @@ spec:
   - name: USERNAME
     kind: string
   tasks:
-  - name: username-task
+  - name: simple-username-task
     taskRef:
       apiVersion: tekton.dev/v1
       name: simple-username-task
