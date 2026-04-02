@@ -61,48 +61,57 @@ java-runtime
 
 ```bash
 oc new-app --name=nodejs \
-    openshift/nodejs:18-minimal-ubi9~https://github.com/kosmolito/ex288-study.git#main \
+    --strategy=source \
     --context-dir=s2i-multi-lang-demo/nodejs \
     --labels type=s2i \
-    --strategy=source
+    openshift/nodejs:18-minimal-ubi9~https://github.com/kosmolito/ex288-study.git#main \
 
 oc expose svc/nodejs
 
 
 oc new-app --name=python \
-    openshift/python:3.12-ubi9~https://github.com/kosmolito/ex288-study.git#main \
+    --strategy=source \
     --context-dir=s2i-multi-lang-demo/python \
     --labels type=s2i \
-    --strategy=source
+    openshift/python:3.12-ubi9~https://github.com/kosmolito/ex288-study.git#main
 
 oc expose svc/python
 
 oc new-app --name=golang \
-    openshift/golang:1.18-ubi9~https://github.com/kosmolito/ex288-study.git#main \
+    --strategy=source \
     --context-dir=s2i-multi-lang-demo/golang \
     --labels type=s2i \
-    --strategy=source
+    openshift/golang:1.18-ubi9~https://github.com/kosmolito/ex288-study.git#main
 
 oc expose deployment/golang --port=8080
 oc expose svc/golang
 
 
 oc new-app --name=quarkus \
-    openshift/java:openjdk-17-ubi8~https://github.com/kosmolito/ex288-study.git#main \
+    --strategy=source \
     --context-dir=s2i-multi-lang-demo/quarkus \
     --labels type=s2i \
-    --strategy=source
+    openshift/java:openjdk-17-ubi8~https://github.com/kosmolito/ex288-study.git#main
 
 oc expose svc/quarkus
 
 
 oc new-app --name=springboot \
-    openshift/java:openjdk-17-ubi8~https://github.com/kosmolito/ex288-study.git#main \
+    --strategy=source \
     --context-dir=s2i-multi-lang-demo/springboot \
     --labels type=s2i \
-    --strategy=source
+    openshift/java:openjdk-17-ubi8~https://github.com/kosmolito/ex288-study.git#main
 
 oc expose svc/springboot
+
+
+oc new-app --name=nodejs-docker \
+    --strategy=docker \
+    --context-dir=s2i-multi-lang-demo/nodejs-docker \
+    --labels type=s2i \
+    https://github.com/kosmolito/ex288-study.git#main
+
+oc expose svc/nodejs-docker
 ```
 
 ## Notes
