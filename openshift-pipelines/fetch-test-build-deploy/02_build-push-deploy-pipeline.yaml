@@ -1,0 +1,140 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: pipeline-build-push-deploy
+spec:
+  workspaces:
+  - name: shared
+  params:
+  - name: APP_NAME
+    type: string
+
+  - name: APP_PORT
+    type: string
+    default: "8080"
+
+  - name: ENABLE_ROUTE
+    type: string
+    default: "true"
+
+  - name: IMAGE_REGISTRY_URL
+    type: string
+    default: "docker.io"
+
+  - name: IMAGE_REGISTRY_NAMESPACE
+    type: string
+    default: kosmolito
+
+  - name: GIT_REPO_URL
+    type: string
+
+  - name: GIT_REVISION
+    type: string
+    default: "main"
+
+  - name: CONTEXT
+    type: string
+    default: "."
+
+  - name: DOCKERFILE
+    type: string
+    default: ./Containerfile
+
+  - name: k8s_MANIFESTS_PATH
+    type: string
+    default: openshift-pipelines/k8s_manifests/
+
+  tasks:
+
+  - name: fetch-repo
+    taskRef:
+      resolver: cluster
+      params:
+      - name: name
+        value: git-clone
+      - name: kind
+        value: task
+      - name: namespace
+        value: openshift-pipelines
+    params:
+    - name: URL
+      value: $(params.GIT_REPO_URL)
+    - name: REVISION
+      value: $(params.GIT_REVISION)
+    workspaces:
+    - name: output
+      workspace: shared
+
+  - name: get-git-short-hash
+    runAfter:
+    - fetch-repo
+    taskRef:
+      resolver: cluster
+      params:
+      - name: name
+        value: get-git-short-hash
+      - name: kind
+        value: task
+      - name: namespace
+        value: openshift-pipelines
+
+    workspaces:
+    - name: source
+      workspace: shared
+
+  - name: build-image
+    runAfter:
+    - get-git-short-hash
+    taskRef:
+      resolver: cluster
+      params:
+      - name: name
+        value: buildah
+      - name: kind
+        value: task
+      - name: namespace
+        value: openshift-pipelines
+    params:
+    - name: IMAGE
+      value: "$(params.IMAGE_REGISTRY_URL)/$(params.IMAGE_REGISTRY_NAMESPACE)/$(params.APP_NAME):$(tasks.get-git-short-hash.results.SHORT_COMMIT_HASH)"
+    - name: DOCKERFILE
+      value: $(params.DOCKERFILE)
+    - name: CONTEXT
+      value: $(params.CONTEXT)
+    workspaces:
+    - name: source
+      workspace: shared
+
+  - name: helm-app-deployment
+    runAfter:
+    - build-image
+    taskRef:
+      resolver: cluster
+      params:
+      - name: name
+        value: openshift-client
+      - name: kind
+        value: task
+      - name: namespace
+        value: openshift-pipelines
+    params:
+    - name: SCRIPT
+      value: |
+        echo "Short hash: $(tasks.get-git-short-hash.results.SHORT_COMMIT_HASH)"
+
+        export APP_NAME=$(params.APP_NAME)
+        export APP_PORT=$(params.APP_PORT)
+        export IMAGE=$(params.IMAGE_REGISTRY_URL)/$(params.IMAGE_REGISTRY_NAMESPACE)/$(params.APP_NAME):$(tasks.get-git-short-hash.results.SHORT_COMMIT_HASH)
+
+        cd $(workspaces.manifest_dir.path)/$(params.k8s_MANIFESTS_PATH)
+
+        echo "Using IMAGE=$IMAGE"
+        sed "s|\${APP_NAME}|$APP_NAME|g; s|\${IMAGE}|$IMAGE|g; s|\${APP_PORT}|$APP_PORT|g" manifests-template.yaml > manifests.yaml
+
+        echo "Generated manifest:"
+        cat manifests.yaml
+
+        oc apply -f manifests.yaml
+    workspaces:
+    - name: manifest_dir
+      workspace: shared

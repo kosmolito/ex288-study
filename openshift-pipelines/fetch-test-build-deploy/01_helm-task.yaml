@@ -1,0 +1,34 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: helm-task
+  namespace: openshift-pipelines
+spec:
+  workspaces:
+  - name: source
+  params:
+  - name: HELM_IMAGE
+    type: string
+    default: "docker.io/alpine/k8s:1.34.4"
+  - name: APP_NAME
+    type: string
+  - name: SCRIPT
+    type: string
+    default: helm version
+  steps:
+  - name: helm-upgrade
+    image: $(params.HELM_IMAGE)
+    script: |
+      $(params.SCRIPT)
+    # script: |
+    #   echo "current installed helm releases"
+    #   helm list
+    #   echo ""
+
+    #   echo "installing helm chart..."
+    #   helm upgrade $(params.APP_NAME) . --wait --install --debug --rollback-on-failure --create-namespace \
+    #   --set fullnameOverride=$(params.APP_NAME) \
+    #   --set image.repository="$(params.IMAGE_REGISTRY_URL)/$(params.IMAGE_REGISTRY_NAMESPACE)/$(params.APP_NAME)" \
+    #   --set image.tag="$(tasks.get-git-short-hash.results.SHORT_COMMIT_HASH)" \
+    #   --set service.port=$(params.APP_PORT) \
+    #   --set route.enabled=$(params.ENABLE_ROUTE)

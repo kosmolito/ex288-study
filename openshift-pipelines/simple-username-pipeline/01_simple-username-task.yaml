@@ -1,0 +1,16 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: simple-username-task
+spec:
+  params:
+  - name: USERNAME
+    type: string
+    default: "john"
+  steps:
+  - name: script1
+    image: ubi9
+    script: |
+      #!/bin/bash
+
+      echo "Hello $USERNAME"

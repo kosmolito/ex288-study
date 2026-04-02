@@ -1,0 +1,143 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: pipeline-build-push-helm-deploy
+spec:
+  workspaces:
+  - name: shared
+  params:
+  - name: APP_NAME
+    type: string
+
+  - name: APP_PORT
+    type: string
+    default: "8080"
+
+  - name: HELM_CHART_PATH
+    type: string
+    default: helm-manifests
+
+  - name: ENABLE_ROUTE
+    type: string
+    default: "true"
+
+  - name: IMAGE_REGISTRY_URL
+    type: string
+    default: "registry.local.kosmo.pro"
+
+  - name: IMAGE_REGISTRY_NAMESPACE
+    type: string
+    default: ci
+
+  - name: GIT_REPO_URL
+    type: string
+
+  - name: GIT_REVISION
+    type: string
+    default: "main"
+
+  - name: CONTEXT
+    type: string
+    default: "."
+
+  - name: DOCKERFILE
+    type: string
+    default: ./Containerfile
+
+  - name: k8s_MANIFESTS_PATH
+    type: string
+    default: k8s_manifests/
+
+  tasks:
+
+  - name: fetch-repo
+    taskRef:
+      resolver: cluster
+      params:
+      - name: name
+        value: git-clone
+      - name: kind
+        value: task
+      - name: namespace
+        value: openshift-pipelines
+    params:
+    - name: URL
+      value: $(params.GIT_REPO_URL)
+    - name: REVISION
+      value: $(params.GIT_REVISION)
+    workspaces:
+    - name: output
+      workspace: shared
+
+  - name: get-git-short-hash
+    runAfter:
+    - fetch-repo
+    taskRef:
+      resolver: cluster
+      params:
+      - name: name
+        value: get-git-short-hash
+      - name: kind
+        value: task
+      - name: namespace
+        value: openshift-pipelines
+    workspaces:
+    - name: source
+      workspace: shared
+
+  - name: build-image
+    runAfter:
+    - get-git-short-hash
+    # - fetch-repo
+    taskRef:
+      resolver: cluster
+      params:
+      - name: name
+        value: buildah
+      - name: kind
+        value: task
+      - name: namespace
+        value: openshift-pipelines
+    params:
+    - name: IMAGE
+      value: "$(params.IMAGE_REGISTRY_URL)/$(params.IMAGE_REGISTRY_NAMESPACE)/$(params.APP_NAME):$(tasks.get-git-short-hash.results.SHORT_COMMIT_HASH)"
+    - name: DOCKERFILE
+      value: $(params.DOCKERFILE)
+    - name: CONTEXT
+      value: $(params.CONTEXT)
+    workspaces:
+    - name: source
+      workspace: shared
+
+  - name: helm-app-deployment
+    runAfter:
+    - build-image
+    taskRef:
+      resolver: cluster
+      params:
+      - name: name
+        value: helm-task
+      - name: kind
+        value: task
+      - name: namespace
+        value: openshift-pipelines
+      - name: APP_NAME
+        value: $(params.APP_NAME)
+    params:
+    - name: SCRIPT
+      value: |
+        echo "current installed helm releases"
+        helm list
+        echo ""
+
+        cd $(workspaces.source.path)/$(params.HELM_CHART_PATH)
+        echo "installing helm chart..."
+        helm upgrade $(params.APP_NAME) . --wait --install --debug --rollback-on-failure --create-namespace \
+        --set fullnameOverride=$(params.APP_NAME) \
+        --set image.repository="$(params.IMAGE_REGISTRY_URL)/$(params.IMAGE_REGISTRY_NAMESPACE)/$(params.APP_NAME)" \
+        --set image.tag="$(tasks.get-git-short-hash.results.SHORT_COMMIT_HASH)" \
+        --set service.port=$(params.APP_PORT) \
+        --set route.enabled=$(params.ENABLE_ROUTE)
+    workspaces:
+    - name: source
+      workspace: shared

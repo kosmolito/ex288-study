@@ -1,0 +1,18 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: get-git-short-hash
+  namespace: openshift-pipelines
+spec:
+  workspaces:
+    - name: source
+  results:
+    - name: SHORT_COMMIT_HASH
+      description: The short git commit hash (8 characters)
+  steps:
+    - name: get-git-short-hash
+      image: alpine/git
+      script: |
+        git config --global --add safe.directory $(workspaces.source.path)
+        cd $(workspaces.source.path)
+        git rev-parse --short=8 HEAD | tr -d '\n' > $(results.SHORT_COMMIT_HASH.path)

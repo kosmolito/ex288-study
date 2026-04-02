@@ -1,0 +1,53 @@
+# This template file is used by the pipeline to generate Kubernetes manifests for the application. 
+# The placeholders (e.g., ${APP_NAME}, ${IMAGE}) will be replaced with actual values during the pipeline execution.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ${APP_NAME}
+  name: ${APP_NAME}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${APP_NAME}
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: ${APP_NAME}
+    spec:
+      containers:
+      - image: ${IMAGE}
+        name: ${APP_NAME}
+        ports:
+        - name: http
+          containerPort: ${APP_PORT}
+          protocol: TCP
+        resources: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ${APP_NAME}
+  name: ${APP_NAME}
+spec:
+  ports:
+  - port: ${APP_PORT}
+    protocol: TCP
+    targetPort: ${APP_PORT}
+  selector:
+    app: ${APP_NAME}
+  type: ClusterIP
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: ${APP_NAME}
+spec:
+  to:
+    kind: Service
+    name: ${APP_NAME}
+  port:
+    targetPort: ${APP_PORT}

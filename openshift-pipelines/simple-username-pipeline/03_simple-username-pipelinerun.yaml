@@ -1,0 +1,12 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: simple-username-pipelinerun
+spec:
+  params:
+  - name: USERNAME
+    value: "kosmolito"
+  pipelineRef:
+    apiVersion: tekton.dev/v1
+    name: simple-username-pipeline
+    

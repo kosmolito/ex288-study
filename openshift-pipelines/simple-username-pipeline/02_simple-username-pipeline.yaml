@@ -1,0 +1,14 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: simple-username-pupeline
+spec:
+  params:
+  - name: USERNAME
+    kind: string
+  tasks:
+  - name: username-task
+    taskRef:
+      apiVersion: tekton.dev/v1
+      name: simple-username-task
+      kind: task

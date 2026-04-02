@@ -1,0 +1,15 @@
+apiVersion: tekton.dev/v1
+kind: TaskRun
+metadata:
+  name: simple-username-taskrun
+spec:
+  params:
+  - name: USERNAME
+    value: "kosmolito"
+  taskRef:
+    apiVersion: tekton.dev/v1
+    name: simple-username-task
+    kind: task
+    params:
+    - name: USERNAME
+      value: $(params.USERNAME)
