@@ -1,0 +1,23 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: nodejs-docker
+spec:
+  source:
+    type: Git
+    git:
+      uri: https://github.com/kosmolito/ex288-study.git
+    contextDir: s2i-multi-lang-demo/nodejs-docker
+
+  strategy:
+    type: Docker
+    dockerStrategy: {}
+
+  output:
+    to:
+      kind: ImageStreamTag
+      name: nodejs-docker:latest
+
+  triggers:
+    - type: ConfigChange
+
