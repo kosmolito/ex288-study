@@ -5,10 +5,11 @@ metadata:
 spec:
   params:
   - name: USERNAME
-    kind: string
+    type: string
   tasks:
   - name: simple-username-task
     taskRef:
-      apiVersion: tekton.dev/v1
       name: simple-username-task
-      kind: task
+    params:
+    - name: USERNAME
+      value: $(params.USERNAME)

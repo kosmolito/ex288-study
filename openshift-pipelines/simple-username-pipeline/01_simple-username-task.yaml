@@ -9,8 +9,7 @@ spec:
     default: "john"
   steps:
   - name: script1
-    image: ubi9
+    image: registry.access.redhat.com/ubi9/ubi
     script: |
       #!/bin/bash
-
-      echo "Hello $USERNAME"
+      echo "Hello $(params.USERNAME)"

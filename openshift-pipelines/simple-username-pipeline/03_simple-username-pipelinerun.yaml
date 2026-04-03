@@ -9,4 +9,3 @@ spec:
   pipelineRef:
     apiVersion: tekton.dev/v1
     name: simple-username-pipeline
-    

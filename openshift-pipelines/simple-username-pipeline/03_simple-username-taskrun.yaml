@@ -7,9 +7,4 @@ spec:
   - name: USERNAME
     value: "kosmolito"
   taskRef:
-    apiVersion: tekton.dev/v1
     name: simple-username-task
-    kind: task
-    params:
-    - name: USERNAME
-      value: $(params.USERNAME)
