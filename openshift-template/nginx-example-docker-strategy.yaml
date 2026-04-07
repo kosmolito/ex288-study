@@ -124,7 +124,7 @@ parameters:
   displayName: Name
   name: NAME
   required: true
-  value: nginx-example
+  value: nginx-example-docker
 
 - description: The URL of the repository with your application source code.
   displayName: Git Repository URL

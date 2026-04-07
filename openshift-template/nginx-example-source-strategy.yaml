@@ -127,7 +127,7 @@ parameters:
   displayName: Name
   name: NAME
   required: true
-  value: nginx-example
+  value: nginx-example-source
 
 - description: The OpenShift Namespace where the ImageStream resides.
   displayName: Namespace
