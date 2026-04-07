@@ -20,6 +20,13 @@ helm status lamp-app --namespace lamp-app
 kubectl get all -n lamp-app
 ```
 
+## Convert Helm Chart to Kubernetes Manifests
+
+```bash
+# Convert the Helm chart to Kubernetes manifests and save to a file
+helm template lamp-app --skip-tests . --values values.yaml > ../../kustomize/lamp-app/base/helm-generated.yaml
+```
+
 ## Uninstall Application
 
 ```bash
