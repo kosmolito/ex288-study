@@ -126,18 +126,6 @@ parameters:
   required: true
   value: nginx-example
 
-- description: The OpenShift Namespace where the ImageStream resides.
-  displayName: Namespace
-  name: NAMESPACE
-  required: true
-  value: openshift
-
-- description: Version of NGINX image to be used (1.20-ubi8 by default).
-  displayName: NGINX Version
-  name: NGINX_VERSION
-  required: true
-  value: 1.20-ubi8
-
 - description: The URL of the repository with your application source code.
   displayName: Git Repository URL
   name: SOURCE_REPOSITORY_URL

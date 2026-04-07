@@ -135,11 +135,11 @@ parameters:
   required: true
   value: openshift
 
-- description: Version of NGINX image to be used (1.20-ubi8 by default).
+- description: Version of NGINX image to be used (latest by default).
   displayName: NGINX Version
   name: NGINX_VERSION
   required: true
-  value: 1.20-ubi8
+  value: latest
 
 - description: The URL of the repository with your application source code.
   displayName: Git Repository URL
