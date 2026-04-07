@@ -258,6 +258,7 @@ spec:
             - name: app-code
               mountPath: /etc/apache2/ports.conf
               subPath: apache.conf
+          resources: {}
       volumes:
         - name: app-code
           configMap:
