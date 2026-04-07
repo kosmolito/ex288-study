@@ -1,0 +1,162 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: nginx-example-source-strategy
+  labels:
+    app: nginx-example-source-strategy
+    template: nginx-example-source-strategy
+  annotations:
+    iconClass: icon-nginx
+    openshift.io/display-name: Nginx HTTP server and a reverse proxy
+labels:
+  app: ${NAME}
+  template: ${NAME}
+
+
+objects:
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    name: ${NAME}
+    annotations:
+      description: Keeps track of changes in the application image
+
+
+- apiVersion: build.openshift.io/v1
+  kind: BuildConfig
+  metadata:
+    name: ${NAME}
+    annotations:
+      description: Defines how to build the application
+      template.alpha.openshift.io/wait-for-ready: "true"
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${NAME}:latest
+    source:
+      contextDir: ${CONTEXT_DIR}
+      git:
+        ref: ${SOURCE_REPOSITORY_REF}
+        uri: ${SOURCE_REPOSITORY_URL}
+      type: Git
+    strategy:
+      type: Source
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: nginx:${NGINX_VERSION}
+          namespace: ${NAMESPACE}
+    triggers:
+    - type: ImageChange
+    - type: ConfigChange
+
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      description: Defines how to deploy the application server
+      image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"${NAME}:latest"},"fieldPath":
+        "spec.template.spec.containers[0].image"}]'
+      template.alpha.openshift.io/wait-for-ready: "true"
+    name: ${NAME}
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: ${NAME}
+        name: ${NAME}
+    strategy:
+      type: RollingUpdate
+    template:
+      metadata:
+        labels:
+          app: ${NAME}
+          name: ${NAME}
+      spec:
+        containers:
+        - name: nginx-example
+          env: []
+          image: ' '
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 30
+            timeoutSeconds: 3
+          ports:
+          - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 3
+            timeoutSeconds: 3
+          resources: {}
+
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      description: Exposes and load balances the application pods
+    name: ${NAME}
+  spec:
+    ports:
+    - name: web
+      port: 8080
+      targetPort: 8080
+    selector:
+      name: ${NAME}
+
+
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    annotations:
+      template.openshift.io/expose-uri: http://{.spec.host}{.spec.path}
+    name: ${NAME}
+  spec:
+    to:
+      kind: Service
+      name: ${NAME}
+
+
+parameters:
+- description: The name assigned to all of the frontend objects defined in this template.
+  displayName: Name
+  name: NAME
+  required: true
+  value: nginx-example
+
+- description: The OpenShift Namespace where the ImageStream resides.
+  displayName: Namespace
+  name: NAMESPACE
+  required: true
+  value: openshift
+
+- description: Version of NGINX image to be used (1.20-ubi8 by default).
+  displayName: NGINX Version
+  name: NGINX_VERSION
+  required: true
+  value: 1.20-ubi8
+
+- description: The URL of the repository with your application source code.
+  displayName: Git Repository URL
+  name: SOURCE_REPOSITORY_URL
+  required: true
+
+- description: Set this to a branch name, tag or other ref of your repository if you
+    are not using the default branch.
+  displayName: Git Reference
+  name: SOURCE_REPOSITORY_REF
+  value: "main"
+
+- description: Set this to the relative path to your project if it is not in the root
+    of your repository.
+  displayName: Context Directory
+  name: CONTEXT_DIR
+  value: "."
+
+
+
