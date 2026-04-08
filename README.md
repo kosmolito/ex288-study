@@ -278,11 +278,11 @@ This folder contains simple applications for testing Source-to-Image (S2I) build
 
 ### Structure
 
-* `nodejs/` - Node.js (Express)
-* `python/` - Python (Flask)
-* `golang/` - Go (net/http)
-* `quarkus/` - Java (Quarkus)
-* `springboot/` - Java (Spring Boot)
+- `nodejs/` - Node.js (Express)
+- `python/` - Python (Flask)
+- `golang/` - Go (net/http)
+- `quarkus/` - Java (Quarkus)
+- `springboot/` - Java (Spring Boot)
 
 Each folder contains an independent app that listens on port `8080`.
 
