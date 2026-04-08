@@ -177,8 +177,7 @@ oc delete -f openshift-pipelines/fetch-test-build-deploy/01_get-git-short-hash-t
 oc delete -f openshift-pipelines/fetch-test-build-deploy/01_helm-task.yaml -n pipelines
 oc delete -f openshift-pipelines/fetch-test-build-deploy/02_build-push-deploy-pipeline.yaml -n pipelines
 oc delete -f openshift-pipelines/fetch-test-build-deploy/02_build-push-helm-deploy-pipeline.yaml -n pipelines
-
-
+```
 
 ## OpenShift Template
 
@@ -236,6 +235,12 @@ oc delete all -l app=nginx-source -n templates
 # Delete the OpenShift templates
 oc delete template nginx-example-docker-strategy -n templates
 oc delete template nginx-example-source-strategy -n templates
+
+# Check if the resources are deleted
+oc get all -n templates
+
+# Optionally, delete the namespace
+oc delete namespace templates
 ```
 
 ## S2I Multi-Language Demo
@@ -252,7 +257,14 @@ This folder contains simple applications for testing Source-to-Image (S2I) build
 
 Each folder contains an independent app that listens on port `8080`.
 
-### Deploying Applications
+### Create Project/Namespace for S2I Demo applications
+
+```bash
+# Create project/namespace for the S2I demo
+oc new-project s2i
+```
+
+### Check Available Builder Images
 
 Create an app in OpenShift using the desired language and context directory:
 
@@ -299,38 +311,58 @@ java-runtime
   Tags:    latest, openjdk-11-ubi8, openjdk-17-ubi8, openjdk-8-ubi8
 ```
 
+### Deploy Node.js application
+
 ```bash
 oc new-app --name=nodejs -n s2i \
     --strategy=source \
     --context-dir=s2i-multi-lang-demo/nodejs \
     --labels type=s2i \
-    openshift/nodejs:18-minimal-ubi9~https://github.com/kosmolito/ex288-study.git#main \
+    openshift/nodejs:18-minimal-ubi9~https://github.com/kosmolito/ex288-study.git#main
+
+# Check the status of the build and deployment
+oc logs -f buildconfig/nodejs -n s2i
+oc get all -l app=nodejs -n s2i
 
 # Expose the service to create a route
 oc expose svc/nodejs -n s2i
 
 # Navigate to the application URL
 curl $(oc get route nodejs -o jsonpath='{.spec.host}' -n s2i)
+```
 
+### Deploy Python application
 
+```bash
 oc new-app --name=python -n s2i \
     --strategy=source \
     --context-dir=s2i-multi-lang-demo/python \
     --labels type=s2i \
     openshift/python:3.12-ubi9~https://github.com/kosmolito/ex288-study.git#main
 
+# Check the status of the build and deployment
+oc logs -f buildconfig/python -n s2i
+oc get all -l app=python -n s2i
+
 # Expose the service to create a route
 oc expose svc/python -n s2i
 
 # Navigate to the application URL
 curl $(oc get route python -o jsonpath='{.spec.host}' -n s2i)
+```
 
+### Deploy Go application
 
+```bash
 oc new-app --name=golang -n s2i \
     --strategy=source \
     --context-dir=s2i-multi-lang-demo/golang \
     --labels type=s2i \
     openshift/golang:1.18-ubi9~https://github.com/kosmolito/ex288-study.git#main
+
+# Check the status of the build and deployment
+oc logs -f buildconfig/golang -n s2i
+oc get all -l app=golang -n s2i
 
 # Expose the deployment to create a service with port 8080
 oc expose deployment/golang --port=8080 -n s2i
@@ -340,40 +372,58 @@ oc expose svc/golang -n s2i
 
 # Navigate to the application URL
 curl $(oc get route golang -o jsonpath='{.spec.host}' -n s2i)
+```
 
+### Deploy Java applications (Quarkus and Spring Boot)
 
+```bash
 oc new-app --name=quarkus -n s2i \
     --strategy=source \
     --context-dir=s2i-multi-lang-demo/quarkus \
     --labels type=s2i \
     openshift/java:openjdk-17-ubi8~https://github.com/kosmolito/ex288-study.git#main
 
+# Check the status of the build and deployment
+oc logs -f buildconfig/quarkus -n s2i
+oc get all -l app=quarkus -n s2i
+
 # Expose the service to create a route
 oc expose svc/quarkus -n s2i
 
 # Navigate to the application URL
 curl $(oc get route quarkus -o jsonpath='{.spec.host}' -n s2i)
+````
 
-
+```bash
 oc new-app --name=springboot -n s2i \
     --strategy=source \
     --context-dir=s2i-multi-lang-demo/springboot \
     --labels type=s2i \
     openshift/java:openjdk-17-ubi8~https://github.com/kosmolito/ex288-study.git#main
 
+# Check the status of the build and deployment
+oc logs -f buildconfig/springboot -n s2i
+oc get all -l app=springboot -n s2i
+
 # Expose the service to create a route
 oc expose svc/springboot -n s2i
 
 # Navigate to the application URL
 curl $(oc get route springboot -o jsonpath='{.spec.host}' -n s2i)
+```
 
+### Deploy Node.js application using Docker strategy
 
-
+```bash
 oc new-app --name=nodejs-docker -n s2i \
     --strategy=docker \
     --context-dir=s2i-multi-lang-demo/nodejs-docker \
     --labels type=s2i \
     https://github.com/kosmolito/ex288-study.git#main
+
+# Check the status of the build and deployment
+oc logs -f buildconfig/nodejs-docker -n s2i
+oc get all -l app=nodejs-docker -n s2i
 
 # Expose the service to create a route
 oc expose svc/nodejs-docker -n s2i
@@ -386,6 +436,9 @@ curl $(oc get route nodejs-docker -o jsonpath='{.spec.host}' -n s2i)
 
 ```bash
 oc delete all -l type=s2i -n s2i
+
+# Optionally, delete the namespace
+oc delete namespace s2i
 ```
 
 ### Notes
