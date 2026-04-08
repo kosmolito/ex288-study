@@ -474,3 +474,56 @@ oc delete namespace s2i
 
 - No Dockerfiles are required (uses S2I builder images)
 - Each app is minimal and intended for testing builds only
+
+## Image Streams
+
+```bash
+# Create a project/namespace for the Image Streams
+oc new-project streams
+
+# Create an Image Stream for the bitnami/nginx image
+oc import-image my-nginx --from=docker.io/bitnami/nginx:latest \
+  --namespace streams \
+  --confirm
+
+# You can import with a specific tag if needed:
+oc import-image my-nginx:stable --from=docker.io/bitnami/nginx:latest \
+  --namespace streams \
+  --confirm
+
+# You can add additional tags to the same Image Stream:
+oc tag my-nginx:latest my-nginx:unstable -n streams
+
+# Check the Image Stream
+oc get is -n streams
+
+# Example output:
+NAME       IMAGE REPOSITORY                                                                TAGS                     UPDATED
+my-nginx   default-route-openshift-image-registry.apps-crc.testing/imagestreams/my-nginx   unstable,latest,stable   10 seconds ago
+
+# Create a new application using the Image Stream (image stream is referenced as namespace/image-stream:tag)
+oc new-app --name=nginx-imagestream --image-stream=streams/my-nginx:stable -n streams
+
+# Check the status of the deployment
+oc get all -l app=nginx-imagestream -n streams
+
+# Expose the service to create a route
+oc expose svc/nginx-imagestream -n streams
+
+# Navigate to the application URL
+curl $(oc get route nginx-imagestream -o jsonpath='{.spec.host}' -n streams)
+```
+
+### Cleanup
+
+```bash
+oc delete all -l app=nginx-imagestream -n streams
+
+oc delete is my-nginx -n streams
+
+# Check if the resources are deleted
+oc get all -n streams
+
+# Optionally, delete the namespace
+oc delete namespace streams
+```
