@@ -4,7 +4,6 @@ kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
   name: lamp-app-mariadb
-  namespace: "default"
   labels:
     app.kubernetes.io/instance: lamp-app
     app.kubernetes.io/name: mariadb
@@ -31,7 +30,6 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: lamp-app-mariadb
-  namespace: "default"
   labels:
     app.kubernetes.io/instance: lamp-app
     app.kubernetes.io/name: mariadb
@@ -51,7 +49,6 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: lamp-app-mariadb
-  namespace: "default"
   labels:
     app.kubernetes.io/instance: lamp-app
     app.kubernetes.io/name: mariadb
@@ -64,7 +61,6 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: lamp-app-mariadb
-  namespace: "default"
   labels:
     app.kubernetes.io/instance: lamp-app
     app.kubernetes.io/name: mariadb
@@ -80,7 +76,6 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: lamp-app-mariadb
-  namespace: "default"
   labels:
     app.kubernetes.io/instance: lamp-app
     app.kubernetes.io/name: mariadb
@@ -153,7 +148,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: lamp-app-mariadb-headless
-  namespace: "default"
   labels:
     app.kubernetes.io/instance: lamp-app
     app.kubernetes.io/name: mariadb
@@ -178,7 +172,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: lamp-app-mariadb
-  namespace: "default"
   labels:
     app.kubernetes.io/instance: lamp-app
     app.kubernetes.io/name: mariadb
@@ -258,7 +251,6 @@ spec:
             - name: app-code
               mountPath: /etc/apache2/ports.conf
               subPath: apache.conf
-          resources: {}
       volumes:
         - name: app-code
           configMap:
@@ -269,7 +261,6 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: lamp-app-mariadb
-  namespace: "default"
   labels:
     app.kubernetes.io/instance: lamp-app
     app.kubernetes.io/name: mariadb
@@ -290,8 +281,6 @@ spec:
     type: RollingUpdate
   template:
     metadata:
-      annotations:
-        checksum/configuration: 1c1f39b0b7702584d13dd2f7b14824386e63b52fb555759eb7c073d55a7e5610
       labels:
         app.kubernetes.io/instance: lamp-app
         app.kubernetes.io/name: mariadb
@@ -303,6 +292,7 @@ spec:
       automountServiceAccountToken: false
       serviceAccountName: lamp-app-mariadb
       affinity:
+          
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
             - podAffinityTerm:
@@ -313,8 +303,8 @@ spec:
                     app.kubernetes.io/component: primary
                 topologyKey: kubernetes.io/hostname
               weight: 1
+          
       securityContext:
-        fsGroup: 1001
         fsGroupChangePolicy: Always
         supplementalGroups: []
         sysctls: []
@@ -329,10 +319,7 @@ spec:
               - ALL
             privileged: false
             readOnlyRootFilesystem: true
-            runAsGroup: 1001
             runAsNonRoot: true
-            runAsUser: 1001
-            seLinuxOptions: {}
             seccompProfile:
               type: RuntimeDefault
           resources:
@@ -373,10 +360,7 @@ spec:
               - ALL
             privileged: false
             readOnlyRootFilesystem: true
-            runAsGroup: 1001
             runAsNonRoot: true
-            runAsUser: 1001
-            seLinuxOptions: {}
             seccompProfile:
               type: RuntimeDefault
           env:
