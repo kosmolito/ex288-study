@@ -7,6 +7,35 @@ The idea is to have a self-contained repository with all the necessary resources
 
 I am focusing much more on the practical aspects of the exam, so you will find a lot of hands-on exercises and examples.
 
+## Getting Started (CRC)
+
+Make sure you have CRC (CodeReady Containers) installed and set up on your local machine. You can follow the official documentation to get it up and running: [CodeReady Containers](https://developers.redhat.com/products/openshift-local)
+
+```bash
+# Set up CRC (CodeReady Containers) and start the OpenShift cluster locally.
+crc setup
+crc start
+
+# Wait for CRC to start and then log in to the OpenShift cluster using the provided credentials.
+
+# Apply OpenShift Pipelines Operator
+cat <<-EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  labels:
+    operators.coreos.com/openshift-pipelines-operator-rh.openshift-operators: ""
+  name: openshift-pipelines-operator-rh
+  namespace: openshift-operators
+spec:
+  channel: latest
+  installPlanApproval: Automatic
+  name: openshift-pipelines-operator-rh
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+```
+
 ## Helm
 
 ### Deploy Application
