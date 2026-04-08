@@ -56,6 +56,9 @@ helm uninstall lamp-app --namespace helm
 
 # Check if the resources are deleted
 kubectl get all -n helm
+
+# Optionally, delete the namespace
+kubectl delete namespace helm
 ```
 
 ### Notes
@@ -73,8 +76,8 @@ kubectl get all -n helm
 ### Deploy Application
 
 ```bash
-# Create a namespace for the Kustomize resources
-oc create namespace kustomize
+# Create a project/namespace for the Kustomize deployment
+oc new-project kustomize
 
 # Apply the Kustomize configuration
 oc apply -k kustomize/lamp-app/overlays/dev -n kustomize # or prod
@@ -97,9 +100,17 @@ oc delete -k kustomize/lamp-app/overlays/dev -n kustomize # or prod
 
 # Check if the resources are deleted
 oc get all -n kustomize
+
+# Optionally, delete the namespace
+oc delete namespace kustomize
 ```
 
 ## OpenShift Pipelines
+
+```bash
+# Create a project/namespace for the OpenShift Pipelines
+oc new-project pipelines
+```
 
 ### simple-username-pipeline
 
@@ -156,11 +167,27 @@ tkn pipeline start build-push-deploy-pipeline --namespace pipelines \
 tkn pipelinerun logs -f <pipelinerun-name> -n pipelines
 ```
 
+### Cleanup
+
+```bash
+# Delete the pipeline resources
+oc delete -f openshift-pipelines/simple-username-pipeline/01_simple-username-task.yaml -n pipelines
+oc delete -f openshift-pipelines/simple-username-pipeline/02_simple-username-pipeline.yaml -n pipelines
+oc delete -f openshift-pipelines/fetch-test-build-deploy/01_get-git-short-hash-task.yaml -n pipelines
+oc delete -f openshift-pipelines/fetch-test-build-deploy/01_helm-task.yaml -n pipelines
+oc delete -f openshift-pipelines/fetch-test-build-deploy/02_build-push-deploy-pipeline.yaml -n pipelines
+oc delete -f openshift-pipelines/fetch-test-build-deploy/02_build-push-helm-deploy-pipeline.yaml -n pipelines
+
+
+
 ## OpenShift Template
 
 ### Deploy Application
 
 ```bash
+# Create a project/namespace for the OpenShift templates
+oc new-project templates
+
 # Apply the OpenShift templates
 oc apply -f openshift-template/nginx-example-docker-strategy.yaml -n templates
 oc apply -f openshift-template/nginx-example-source-strategy.yaml -n templates
@@ -168,8 +195,8 @@ oc apply -f openshift-template/nginx-example-source-strategy.yaml -n templates
 # Create a new application using the Docker strategy template
 oc new-app --template=nginx-example-docker-strategy -n templates \
     -p NAME=nginx-docker \
-    -p SOURCE_REPOSITORY_URL=https://github.com/kosmolito/ex288-study.git
-    -p SOURCE_REPOSITORY_REF=main
+    -p SOURCE_REPOSITORY_URL=https://github.com/kosmolito/ex288-study.git \
+    -p SOURCE_REPOSITORY_REF=main \
     -p CONTEXT_DIR=s2i-multi-lang-demo/nginx-docker
 
 # Check the status of the builds and deployments
