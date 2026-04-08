@@ -9,6 +9,10 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copy app content
 COPY html/ /usr/share/nginx/html/
 
+# Fix permissions for OpenShift random UID
+RUN chmod -R g+w /var/cache/nginx /var/run /var/log/nginx \
+    && chgrp -R 0 /var/cache/nginx /var/run /var/log/nginx
+
 # Expose port (OpenShift prefers non-root, but nginx image handles it)
 EXPOSE 8080
 
