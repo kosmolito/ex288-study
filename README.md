@@ -34,6 +34,8 @@ helm template lamp-app --skip-tests helm/lamp-app/ \
   --set global.compatibility.openshift.adaptSecurityContext=force \
   --values helm/lamp-app/values.yaml > kustomize/lamp-app/base/helm-generated.yaml
 
+# Remove namespace from the generated YAML to allow it to be applied in any namespace.
+sed -i.bak '/namespace:/d' kustomize/lamp-app/base/helm-generated.yaml
 
 # Optionally, you can clean up the generated YAML file by removing Helm-specific data.
 sed -i.bak '\#app.kubernetes.io/managed-by.*Helm#d' kustomize/lamp-app/base/helm-generated.yaml
